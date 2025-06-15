@@ -54,7 +54,7 @@ class _ScreeningPageState extends State<ScreeningPage> {
 
   Future<void> _fetchStats() async {
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1:5000/stats'));
+      final response = await http.get(Uri.parse('http://127.0.0.1:5050/stats'));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
@@ -80,7 +80,7 @@ class _ScreeningPageState extends State<ScreeningPage> {
 
     try {
       print("Flutter: Fetching article at index $index...");
-      final response = await http.get(Uri.parse('http://127.0.0.1:5000/article/$index'));
+      final response = await http.get(Uri.parse('http://127.0.0.1:5050/article/$index'));
       
       if (response.statusCode == 200) {
         print("Flutter: Successfully received article $index.");
@@ -110,7 +110,7 @@ class _ScreeningPageState extends State<ScreeningPage> {
 
     try {
         await http.post(
-        Uri.parse('http://127.0.0.1:5000/decide'),
+        Uri.parse('http://127.0.0.1:5050/decide'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'index': _currentIndex, 'decision': decision}),
       );
@@ -125,7 +125,7 @@ class _ScreeningPageState extends State<ScreeningPage> {
   Future<void> _exportBibtex() async {
     try {
       print("Flutter: Requesting export...");
-      final response = await http.get(Uri.parse('http://127.0.0.1:5000/export_bibtex'));
+      final response = await http.get(Uri.parse('http://127.0.0.1:5050/export_bibtex'));
 
       if (response.statusCode == 200) {
         // Get the raw bytes of the file content

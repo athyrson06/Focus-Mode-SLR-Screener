@@ -52,7 +52,7 @@ Future<void> _loadBibtexFile(BuildContext context) async {
       // 2. Prepare the request to send to the Python backend
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://127.0.0.1:5000/load_bibtex'),
+        Uri.parse('http://127.0.0.1:5050/load_bibtex'),
       );
       
       // 3. Add the file to the request differently based on the platform

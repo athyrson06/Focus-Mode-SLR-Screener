@@ -1,0 +1,4 @@
+
+Flask
+bibtexparser
+flask-cors

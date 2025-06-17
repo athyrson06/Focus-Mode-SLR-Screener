@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:file_saver/file_saver.dart';
+import 'package:flutter/services.dart';
+import 'dart:async'; // For TimeoutException
 
 class ScreeningPage extends StatefulWidget {
   const ScreeningPage({super.key});
@@ -54,7 +56,7 @@ class _ScreeningPageState extends State<ScreeningPage> {
 
   Future<void> _fetchStats() async {
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1:5050/stats'));
+      final response = await http.get(Uri.parse('http://127.0.0.1:5000/stats'));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
@@ -80,7 +82,7 @@ class _ScreeningPageState extends State<ScreeningPage> {
 
     try {
       print("Flutter: Fetching article at index $index...");
-      final response = await http.get(Uri.parse('http://127.0.0.1:5050/article/$index'));
+      final response = await http.get(Uri.parse('http://127.0.0.1:5000/article/$index'));
       
       if (response.statusCode == 200) {
         print("Flutter: Successfully received article $index.");
@@ -110,7 +112,7 @@ class _ScreeningPageState extends State<ScreeningPage> {
 
     try {
         await http.post(
-        Uri.parse('http://127.0.0.1:5050/decide'),
+        Uri.parse('http://127.0.0.1:5000/decide'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'index': _currentIndex, 'decision': decision}),
       );
@@ -125,7 +127,7 @@ class _ScreeningPageState extends State<ScreeningPage> {
   Future<void> _exportBibtex() async {
     try {
       print("Flutter: Requesting export...");
-      final response = await http.get(Uri.parse('http://127.0.0.1:5050/export_bibtex'));
+      final response = await http.get(Uri.parse('http://127.0.0.1:5000/export_bibtex'));
 
       if (response.statusCode == 200) {
         // Get the raw bytes of the file content
@@ -152,6 +154,8 @@ class _ScreeningPageState extends State<ScreeningPage> {
       print("Flutter: An error occurred during export: $e");
     }
   }
+
+  
 
   // --- WIDGET BUILDING ---
   // Replace the old function with this new, more powerful version.
@@ -275,7 +279,34 @@ class _ScreeningPageState extends State<ScreeningPage> {
                                 Text("Authors: ${_currentArticle?['author'] ?? 'N/A'}", style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic)),
                                 Text("Journal: ${_currentArticle?['journal'] ?? 'N/A'}, ${_currentArticle?['year'] ?? ''}", style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic)),
                                 const Divider(height: 32),
+                                
+                                // --- CORRECTED SECTION START ---
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      'Abstract:',
+                                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.copy_all_rounded),
+                                      tooltip: 'Copy Abstract to Clipboard',
+                                      color: Colors.grey.shade600,
+                                      onPressed: () {
+                                        final abstractText = _currentArticle?['abstract'] ?? '';
+                                        Clipboard.setData(ClipboardData(text: abstractText));
+                                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                            content: Text('Abstract copied to clipboard!'),
+                                            duration: Duration(seconds: 2)));
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                // This line was missing and is now restored:
                                 _buildParagraphsFromAbstract(_currentArticle?['abstract'] ?? 'No Abstract.'),
+                                // --- CORRECTED SECTION END ---
                               ],
                             ),
                           ),
@@ -297,4 +328,5 @@ class _ScreeningPageState extends State<ScreeningPage> {
       ),
     );
   }
+
 }

@@ -40,26 +40,24 @@ class HomePage extends StatelessWidget {
 
 Future<void> _loadBibtexFile(BuildContext context) async {
   try {
-    // 1. Let the user pick a file. 
-    // `withData: true` is crucial for web to load the file's bytes.
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['bib'],
-      withData: true, 
+      withData: true,
     );
 
     if (result != null) {
-      // 2. Prepare the request to send to the Python backend
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://127.0.0.1:5050/load_bibtex'),
+        Uri.parse('http://127.0.0.1:5000/load_bibtex'),
       );
       
-      // 3. Add the file to the request differently based on the platform
       if (kIsWeb) {
-        // --- WEB PLATFORM LOGIC ---
         final fileBytes = result.files.first.bytes!;
         final fileName = result.files.first.name;
+
+        // Add the filename to the request
+        request.fields['original_filename'] = fileName; // <-- ADD THIS LINE
 
         request.files.add(http.MultipartFile.fromBytes(
           'file',
@@ -68,8 +66,11 @@ Future<void> _loadBibtexFile(BuildContext context) async {
           contentType: MediaType('application', 'x-bibtex'),
         ));
       } else {
-        // --- DESKTOP PLATFORM LOGIC (Windows, macOS, Linux) ---
         File file = File(result.files.single.path!);
+        
+        // Add the filename to the request
+        request.fields['original_filename'] = file.path.split(Platform.pathSeparator).last; // <-- ADD THIS LINE
+
         request.files.add(await http.MultipartFile.fromPath(
           'file',
           file.path,
@@ -77,11 +78,9 @@ Future<void> _loadBibtexFile(BuildContext context) async {
         ));
       }
       
-      // 4. Send the file and wait for a response
+      // The rest of the function remains the same...
       var response = await request.send();
-      
       if (response.statusCode == 200) {
-        // 5. If successful, navigate to the ScreeningPage
         if (context.mounted) {
           Navigator.push(
             context,
@@ -89,20 +88,16 @@ Future<void> _loadBibtexFile(BuildContext context) async {
           );
         }
       } else {
-        // Handle error
         final responseBody = await response.stream.bytesToString();
         print('Failed to upload file. Status code: ${response.statusCode}, Body: $responseBody');
       }
     } else {
-      // User canceled the picker
       print('No file selected.');
     }
   } catch (e) {
-    // Handle any other errors
     print('An error occurred: $e');
   }
 }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
